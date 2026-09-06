@@ -1,0 +1,13 @@
+# Excluded from public GitHub export (see scripts/export/export-public-tree.ps1)
+MAINTAINERS.md
+.cursor/
+archive/
+scripts/deploy/
+scripts/recovery/
+# Whole export toolchain stays private: audit-public-tree.ps1 holds the private
+# strings the gate searches for, so it must never ship publicly.
+scripts/export/
+deploy.local.env
+deploy.local.env.example
+.gitignore.lxc
+docker-compose.lxc.yml

@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f6f3ee;
+  --panel: #fff;
+  --text: #1a1816;
+  --muted: #6b6560;
+  --accent: #5cc98d;
+  --border: #e4ddd3;
+  font-family: system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12110f;
+    --panel: #1c1a18;
+    --text: #f6f3ee;
+    --muted: #a8a29e;
+    --border: #2d2926;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+.app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.header { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.header h1 { margin: 0; font-size: 1.25rem; }
+.header nav { display: flex; gap: 8px; flex: 1; }
+.header button, .panel button { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.header button.active { background: var(--accent); color: #0d1a12; border-color: var(--accent); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.week-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.day-col h3 { margin: 0 0 8px; font-size: 0.9rem; }
+.block { border-left: 4px solid var(--accent); padding: 8px; margin-bottom: 8px; background: var(--bg); border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
+.block.busy { border-left-color: #94a3b8; }
+.block.event { border-left-color: #60a5fa; }
+.composer { display: flex; gap: 8px; margin-bottom: 12px; }
+.composer input, .settings input { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.task-list { list-style: none; padding: 0; margin: 0; }
+.task-list li { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.muted { color: var(--muted); font-size: 0.85rem; }
+.error { background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
+.settings { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }

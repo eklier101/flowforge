@@ -1,0 +1,2 @@
+# Place FlowForge.apk here for CI/Docker bake-in.
+# Release workflow copies the built APK to FlowForge.apk before docker build.

@@ -1,0 +1,65 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Secrets and local deploy config
+.env
+deploy.local.env
+local.properties
+scripts/export/private-patterns.txt
+
+# Runtime data
+data/
+*.db
+*.db-wal
+*.db-shm
+*.apk
+!apk-release/.gitkeep
+
+# Node / web
+node_modules/
+web/node_modules/
+web/dist/
+web/.vite/
+*.tsbuildinfo
+
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/.cxx/
+mobile/ios/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/.env
+
+# Go
+bin/
+
+# Rust
+crates/**/target/
+**/Cargo.lock
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Deploy artifacts
+deploy.tgz
+.public-export/
+
+bundle.hbc
+.tmp-apk/

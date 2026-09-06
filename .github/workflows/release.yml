@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse version from tag
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${GITHUB_SHA::7}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          CODE=$(node -e "const p='$VERSION'.split('.').map(Number); console.log((p[0]||0)*10000+(p[1]||0)*100+(p[2]||0) || Date.now()%100000000)")
+          echo "version_code=$CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web UI
+        run: npm run build -w web
+
+      - name: Build Go binary
+        run: go build -o flowforge ./cmd/flowforge
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+
+      # Do NOT run `expo prebuild` here — it regenerates android/ from assets and
+      # wipes custom native code (HabitsLink) and can replace launcher icons.
+      # The committed mobile/android tree is the source of truth for release APKs.
+
+      - name: Set Android versionCode
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ steps.ver.outputs.version_code }}/" mobile/android/app/build.gradle
+          sed -i 's/versionName "[^"]*"/versionName "${{ steps.ver.outputs.version }}"/' mobile/android/app/build.gradle
+
+      - name: Build APK
+        working-directory: mobile/android
+        # assembleRelease embeds the JS bundle (assembleDebug does not — sideloads crash on open).
+        run: chmod +x gradlew && ./gradlew assembleRelease
+
+      - name: Stage APK for release and Docker bake-in
+        run: |
+          mkdir -p release-artifacts apk-release
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk release-artifacts/FlowForge.apk
+          cp release-artifacts/FlowForge.apk "release-artifacts/FlowForge-v${{ steps.ver.outputs.version }}.apk"
+          cp release-artifacts/FlowForge.apk apk-release/FlowForge.apk
+
+      # v3.0.2 - v3.0.5 all shipped APKs that crashed before the first frame.
+      # No APK reaches a release tag without booting on a real emulator first.
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: APK startup smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: chmod +x scripts/mobile/apk-smoke-test.sh && scripts/mobile/apk-smoke-test.sh release-artifacts/FlowForge.apk
+
+      - name: Create or update GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-artifacts/FlowForge.apk
+            release-artifacts/FlowForge-v${{ steps.ver.outputs.version }}.apk
+          generate_release_notes: true
+          make_latest: true
+
+      - name: Upload APK to latest release (manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest release-artifacts/FlowForge.apk --clobber
+          else
+            gh release create latest release-artifacts/FlowForge.apk --title "Latest" --notes "Latest FlowForge APK" --latest
+          fi
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.go
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

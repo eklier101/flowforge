@@ -1,0 +1,23 @@
+services:
+  flowforge:
+    image: ghcr.io/eklier101/flowforge:latest
+    container_name: flowforge
+    ports:
+      - "8098:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      FLOWFORGE_PORT: "8000"
+      FLOWFORGE_WEB_DIST: /app/web/dist
+      FLOWFORGE_STATIC_DIR: /app/assets/static
+      FLOWFORGE_TEMPLATES_DIR: /app/assets/templates
+      FLOWFORGE_SOLVER_BIN: /app/flowforge-solver
+      FLOWFORGE_APK_GITHUB_REPO: eklier101/flowforge
+      FLOWFORGE_APP_VERSION: ${FLOWFORGE_APP_VERSION:-3.0.9}
+      FLOWFORGE_VERSION_CODE: ${FLOWFORGE_VERSION_CODE:-30009}
+      FLOWFORGE_PUBLIC_URL: ${FLOWFORGE_PUBLIC_URL:-}
+      FLOWFORGE_SCHEDULER_ENGINE: ${FLOWFORGE_SCHEDULER_ENGINE:-go}
+      # Optional first-admin seed (private .env / deploy host only — never commit real values)
+      FLOWFORGE_ADMIN_USER: ${FLOWFORGE_ADMIN_USER:-}
+      FLOWFORGE_ADMIN_PASSWORD: ${FLOWFORGE_ADMIN_PASSWORD:-}
+    restart: unless-stopped

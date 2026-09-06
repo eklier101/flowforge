@@ -1,0 +1,13 @@
+{
+  "name": "flowforge",
+  "private": true,
+  "workspaces": [
+    "packages/api-client",
+    "web",
+    "mobile"
+  ],
+  "scripts": {
+    "build:web": "npm run build -w web",
+    "build:api-client": "npm run build -w @flowforge/api-client"
+  }
+}

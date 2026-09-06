@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "FlowForge",
+    "slug": "flowforge",
+    "version": "3.0.9",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#12110F"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.flowforge.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#12110F"
+      },
+      "package": "com.flowforge.app",
+      "usesCleartextTraffic": true
+    },
+    "plugins": []
+  }
+}
